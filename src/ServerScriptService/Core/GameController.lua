@@ -3,13 +3,22 @@
 
 local GameController = {}
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerScriptService = game:GetService("ServerScriptService")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+-- Импорт систем
+local WaveManager = require(ServerScriptService.Systems.WaveSystem.WaveManager)
+local ResourceManager = require(ServerScriptService.Systems.ResourceSystem.ResourceManager)
+local BuildManager = require(ServerScriptService.Systems.BuildingSystem.BuildManager)
+local CombatManager = require(ServerScriptService.Systems.CombatSystem.CombatManager)
+local AntiCheat = require(ServerScriptService.Security.AntiCheat)
+local ProfileService = require(ServerScriptService.Data.ProfileService)
 
--- Модули
-local GameConstants = require(ReplicatedStorage.Modules.Shared.GameConstants)
+-- Remotes
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = {
+    UseAbility = ReplicatedStorage.Remotes.Combat:FindFirstChild("UseAbility"),
+    BuildStructure = ReplicatedStorage.Remotes.Building:FindFirstChild("BuildStructure"),
+    GatherResource = ReplicatedStorage.Remotes.Resources:FindFirstChild("GatherResource"),
+    SelectClass = ReplicatedStorage.Remotes.UI:FindFirstChild("SelectClass"),
+}
 
 -- Состояние игры
 GameController.State = {
@@ -34,19 +43,22 @@ GameController.Events = {
 
 function GameController:Initialize()
     print("[GameController] Initializing Nexus Siege...")
-    
     -- Инициализация систем
-    self:InitializeSystems()
-    
+    WaveManager:Initialize()
+    ResourceManager:Initialize()
+    BuildManager:Initialize()
+    CombatManager:Initialize()
+    AntiCheat:Initialize()
+    ProfileService:Initialize()
     -- События игроков
     Players.PlayerAdded:Connect(function(player)
         self:OnPlayerJoined(player)
     end)
-    
     Players.PlayerRemoving:Connect(function(player)
         self:OnPlayerLeft(player)
     end)
-    
+    -- Подключение Remotes
+    self:ConnectRemotes()
     -- Запуск игрового цикла
     self:StartGameLoop()
 end
@@ -399,6 +411,33 @@ function GameController:GetGameState()
         playerCount = #Players:GetPlayers(),
         isGameActive = self.State.IsGameActive
     }
+end
+
+function GameController:ConnectRemotes()
+    if Remotes.UseAbility then
+        Remotes.UseAbility.OnServerEvent:Connect(function(player, abilityNumber)
+            print("[Remote] UseAbility from", player.Name, abilityNumber)
+            -- TODO: Проверка класса, кулдауна, маны и вызов способности
+        end)
+    end
+    if Remotes.BuildStructure then
+        Remotes.BuildStructure.OnServerEvent:Connect(function(player, structureType, position)
+            print("[Remote] BuildStructure from", player.Name, structureType, position)
+            BuildManager:BuildStructure(player, structureType, position)
+        end)
+    end
+    if Remotes.GatherResource then
+        Remotes.GatherResource.OnServerEvent:Connect(function(player, resourceType, amount)
+            print("[Remote] GatherResource from", player.Name, resourceType, amount)
+            ResourceManager:GatherResource(player, resourceType, amount)
+        end)
+    end
+    if Remotes.SelectClass then
+        Remotes.SelectClass.OnServerEvent:Connect(function(player, className)
+            print("[Remote] SelectClass from", player.Name, className)
+            self:SetPlayerClass(player, className)
+        end)
+    end
 end
 
 -- Инициализация при загрузке

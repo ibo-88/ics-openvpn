@@ -25,12 +25,13 @@ ClientMain.State = {
     uiVisible = true
 }
 
--- RemoteEvents (будут созданы позже)
+-- Remotes
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = {
-    UseAbility = nil,
-    BuildStructure = nil,
-    GatherResource = nil,
-    SelectClass = nil
+    UseAbility = ReplicatedStorage.Remotes.Combat:FindFirstChild("UseAbility"),
+    BuildStructure = ReplicatedStorage.Remotes.Building:FindFirstChild("BuildStructure"),
+    GatherResource = ReplicatedStorage.Remotes.Resources:FindFirstChild("GatherResource"),
+    SelectClass = ReplicatedStorage.Remotes.UI:FindFirstChild("SelectClass"),
 }
 
 -- UI элементы
@@ -428,27 +429,21 @@ function ClientMain:UseAbility(abilityNumber)
         print("[ClientMain] No class selected")
         return
     end
-    
-    -- Отправка запроса на сервер
     if Remotes.UseAbility then
         Remotes.UseAbility:FireServer(abilityNumber)
     else
-        print("[ClientMain] UseAbility remote not found")
+        warn("[ClientMain] UseAbility remote not found")
     end
 end
 
 function ClientMain:SelectClass(className)
     print("[ClientMain] Selecting class:", className)
-    
-    -- Отправка запроса на сервер
     if Remotes.SelectClass then
         Remotes.SelectClass:FireServer(className)
+    else
+        warn("[ClientMain] SelectClass remote not found")
     end
-    
-    -- Скрытие меню выбора класса
     self:ShowClassSelection(false)
-    
-    -- Обновление UI
     self:UpdateAbilityBar(className)
 end
 
@@ -507,15 +502,12 @@ end
 
 function ClientMain:PlaceStructure()
     if not self.State.selectedStructure or not self.State.buildPreview then return end
-    
     local position = self.State.buildPreview.Position
-    
-    -- Отправка запроса на сервер
     if Remotes.BuildStructure then
         Remotes.BuildStructure:FireServer(self.State.selectedStructure, position)
+    else
+        warn("[ClientMain] BuildStructure remote not found")
     end
-    
-    -- Очистка превью
     self:ClearBuildPreview()
 end
 
@@ -626,6 +618,14 @@ function ClientMain:ShowNotification(message, duration)
     
     task.wait(0.5)
     screenGui:Destroy()
+end
+
+function ClientMain:GatherResource(resourceType, amount)
+    if Remotes.GatherResource then
+        Remotes.GatherResource:FireServer(resourceType, amount)
+    else
+        warn("[ClientMain] GatherResource remote not found")
+    end
 end
 
 -- Инициализация при загрузке
