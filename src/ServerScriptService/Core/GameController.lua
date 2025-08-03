@@ -12,6 +12,11 @@ local EnemyManager = require(ServerScriptService.Systems.EnemySystem.EnemyManage
 local AntiCheat = require(ServerScriptService.Security.AntiCheat)
 local ProfileService = require(ServerScriptService.Data.ProfileService)
 local AchievementManager = require(ServerScriptService.Systems.AchievementSystem.AchievementManager)
+local AssetManager = require(ReplicatedStorage.Assets.AssetManager)
+local CustomAssetLoader = require(ReplicatedStorage.Assets.CustomAssetLoader)
+local ModelBuilder = require(ReplicatedStorage.Assets.ModelBuilder)
+local TextureManager = require(ReplicatedStorage.Assets.TextureManager)
+local AssetEditor = require(ReplicatedStorage.Assets.AssetEditor)
 
 -- Remotes
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -55,6 +60,15 @@ function GameController:Initialize()
     CombatManager:Initialize()
     AntiCheat:Initialize()
     AchievementManager:Initialize()
+    AssetManager:Initialize()
+    CustomAssetLoader:Initialize()
+    ModelBuilder:Initialize()
+    TextureManager:Initialize()
+    AssetEditor:Initialize()
+    
+    -- Загрузка кастомных активов
+    CustomAssetLoader:LoadAssetsAsync()
+    CustomAssetLoader:CreateFallbackModels()
     
     -- Создание Нексуса
     self:CreateNexus()
