@@ -1,0 +1,63 @@
+{
+  "name": "NexusSiege",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Core": {
+        "$path": "src/ServerScriptService/Core"
+      },
+      "Systems": {
+        "$path": "src/ServerScriptService/Systems"
+      },
+      "Security": {
+        "$path": "src/ServerScriptService/Security"
+      },
+      "Data": {
+        "$path": "src/ServerScriptService/Data"
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Remotes": {
+        "$path": "src/ReplicatedStorage/Remotes"
+      },
+      "Modules": {
+        "$path": "src/ReplicatedStorage/Modules"
+      },
+      "Assets": {
+        "$path": "src/ReplicatedStorage/Assets"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      },
+      "StarterCharacterScripts": {
+        "$path": "src/StarterPlayer/StarterCharacterScripts"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "MainMenu": {
+        "$path": "src/StarterGui/MainMenu"
+      },
+      "GameHUD": {
+        "$path": "src/StarterGui/GameHUD"
+      },
+      "BuildMenu": {
+        "$path": "src/StarterGui/BuildMenu"
+      },
+      "ClassSelection": {
+        "$path": "src/StarterGui/ClassSelection"
+      },
+      "Shop": {
+        "$path": "src/StarterGui/Shop"
+      },
+      "EndScreen": {
+        "$path": "src/StarterGui/EndScreen"
+      }
+    }
+  }
+}
