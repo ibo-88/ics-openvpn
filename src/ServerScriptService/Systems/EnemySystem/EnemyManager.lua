@@ -8,6 +8,7 @@ EnemyManager.__index = EnemyManager
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConstants = require(ReplicatedStorage.Modules.Shared.GameConstants)
 local Formulas = require(ReplicatedStorage.Modules.Shared.FormulasModule)
+local LootManager = require(script.Parent.Parent.LootSystem.LootManager)
 
 -- Состояние
 EnemyManager.activeEnemies = {}
@@ -341,6 +342,21 @@ function EnemyManager:HandleEnemyDeath(enemy)
     if enemy:GetAttribute("WillExplode") then
         self:CreateExplosion(enemy.PrimaryPart.Position)
     end
+    
+    -- Дроп лута
+    local enemyType = enemy:GetAttribute("EnemyType")
+    local position = enemy.PrimaryPart.Position
+    
+    -- Определение типа врага для лута
+    local lootType = "common_enemy"
+    if enemyType == "Boss" or enemyType == "Dragon" then
+        lootType = "boss_enemy"
+    elseif enemyType == "Elite" or enemyType == "Troll" then
+        lootType = "elite_enemy"
+    end
+    
+    -- Создание лута
+    LootManager:DropLootFromEnemy(enemy, lootType, position)
     
     -- Удаление из активных врагов
     for i, activeEnemy in ipairs(self.activeEnemies) do

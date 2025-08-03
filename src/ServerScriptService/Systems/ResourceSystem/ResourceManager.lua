@@ -8,6 +8,7 @@ ResourceManager.__index = ResourceManager
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConstants = require(ReplicatedStorage.Modules.Shared.GameConstants)
 local ProfileService = require(script.Parent.Parent.Data.ProfileService)
+local LootManager = require(script.Parent.Parent.LootSystem.LootManager)
 
 -- Состояние
 ResourceManager.resourceNodes = {}
@@ -173,6 +174,10 @@ function ResourceManager:CompleteResourceGathering(player, node)
         if remainingAmount <= 0 then
             self:DepleteResourceNode(node)
         end
+        
+        -- Дроп дополнительного лута с ресурсной ноды
+        local nodeType = string.lower(resourceType) .. "_node"
+        LootManager:DropLootFromResourceNode(nodeType, node.Position)
         
         -- Уведомление игрока
         self:NotifyPlayer(player, "+" .. amount .. " " .. resourceType, "success")

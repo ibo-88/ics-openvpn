@@ -8,6 +8,7 @@ WaveManager.__index = WaveManager
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConstants = require(ReplicatedStorage.Modules.Shared.GameConstants)
 local EnemyManager = require(script.Parent.Parent.EnemySystem.EnemyManager)
+local LootManager = require(script.Parent.Parent.LootSystem.LootManager)
 
 -- Состояние
 WaveManager.currentWave = 0
@@ -161,6 +162,10 @@ function WaveManager:EndWave(waveNumber)
     print("[WaveManager] Ending wave", waveNumber)
     print("[WaveManager] Enemies spawned:", self.enemiesSpawned)
     print("[WaveManager] Enemies killed:", self.enemiesKilled)
+    
+    -- Выдача наград за волну
+    local players = game:GetService("Players"):GetPlayers()
+    LootManager:GiveWaveReward(waveNumber, players)
     
     -- Очистка оставшихся врагов
     EnemyManager:ClearAllEnemies()

@@ -17,6 +17,14 @@ local CustomAssetLoader = require(ReplicatedStorage.Assets.CustomAssetLoader)
 local ModelBuilder = require(ReplicatedStorage.Assets.ModelBuilder)
 local TextureManager = require(ReplicatedStorage.Assets.TextureManager)
 local AssetEditor = require(ReplicatedStorage.Assets.AssetEditor)
+local SoundManager = require(ReplicatedStorage.Audio.SoundManager)
+local AnimationManager = require(ReplicatedStorage.Effects.AnimationManager)
+local EconomyManager = require(ServerScriptService.Systems.EconomySystem.EconomyManager)
+local InventoryManager = require(ServerScriptService.Systems.InventorySystem.InventoryManager)
+local StatisticsManager = require(ServerScriptService.Systems.StatisticsSystem.StatisticsManager)
+local LootManager = require(ServerScriptService.Systems.LootSystem.LootManager)
+local CraftingManager = require(ServerScriptService.Systems.CraftingSystem.CraftingManager)
+local ItemManager = require(ServerScriptService.Systems.ItemSystem.ItemManager)
 
 -- Remotes
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -25,6 +33,9 @@ local Remotes = {
     BuildStructure = ReplicatedStorage.Remotes.Building:FindFirstChild("BuildStructure"),
     GatherResource = ReplicatedStorage.Remotes.Resources:FindFirstChild("GatherResource"),
     SelectClass = ReplicatedStorage.Remotes.UI:FindFirstChild("SelectClass"),
+    StartCrafting = ReplicatedStorage.Remotes.Crafting:FindFirstChild("StartCrafting"),
+    GetRecipes = ReplicatedStorage.Remotes.Crafting:FindFirstChild("GetRecipes"),
+    GetStations = ReplicatedStorage.Remotes.Crafting:FindFirstChild("GetStations"),
 }
 
 -- Состояние игры
@@ -65,6 +76,14 @@ function GameController:Initialize()
     ModelBuilder:Initialize()
     TextureManager:Initialize()
     AssetEditor:Initialize()
+    SoundManager:Initialize()
+    AnimationManager:Initialize()
+    EconomyManager:Initialize()
+    InventoryManager:Initialize()
+    StatisticsManager:Initialize()
+    LootManager:Initialize()
+    CraftingManager:Initialize()
+    ItemManager:Initialize()
     
     -- Загрузка кастомных активов
     CustomAssetLoader:LoadAssetsAsync()
@@ -679,6 +698,27 @@ function GameController:ConnectRemotes()
         end)
     end
     
+    -- Подключение StartCrafting
+    if Remotes.StartCrafting then
+        Remotes.StartCrafting.OnServerEvent:Connect(function(player, recipeId, stationId, quantity)
+            self:HandleStartCrafting(player, recipeId, stationId, quantity)
+        end)
+    end
+    
+    -- Подключение GetRecipes
+    if Remotes.GetRecipes then
+        Remotes.GetRecipes.OnServerEvent:Connect(function(player, stationId)
+            self:HandleGetRecipes(player, stationId)
+        end)
+    end
+    
+    -- Подключение GetStations
+    if Remotes.GetStations then
+        Remotes.GetStations.OnServerEvent:Connect(function(player)
+            self:HandleGetStations(player)
+        end)
+    end
+    
     print("[GameController] Remote Events connected successfully!")
 end
 
@@ -815,6 +855,56 @@ function GameController:HandleSelectClass(player, className)
     end
     
     self:NotifyPlayer(player, "Класс изменен на: " .. className, "success")
+end
+
+-- Обработка начала крафтинга
+function GameController:HandleStartCrafting(player, recipeId, stationId, quantity)
+    if not player or not recipeId or not stationId then
+        return
+    end
+    
+    -- Проверка анти-чита
+    if not AntiCheat:ValidateAction(player, "StartCrafting", {recipeId = recipeId, stationId = stationId, quantity = quantity}) then
+        self:NotifyPlayer(player, "Крафтинг отклонен анти-читом", "error")
+        return
+    end
+    
+    -- Попытка крафтинга
+    local success, message, craftingTime = CraftingManager:StartCrafting(player, recipeId, stationId, quantity)
+    
+    if success then
+        self:NotifyPlayer(player, message .. " (Время: " .. craftingTime .. "с)", "success")
+    else
+        self:NotifyPlayer(player, message, "error")
+    end
+end
+
+-- Обработка получения рецептов
+function GameController:HandleGetRecipes(player, stationId)
+    if not player or not stationId then
+        return
+    end
+    
+    local recipes = CraftingManager:GetAvailableRecipes(player, stationId)
+    
+    -- Отправка рецептов клиенту
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local getRecipes = ReplicatedStorage.Remotes.Crafting.GetRecipes
+    getRecipes:FireClient(player, recipes)
+end
+
+-- Обработка получения станций
+function GameController:HandleGetStations(player)
+    if not player then
+        return
+    end
+    
+    local stations = CraftingManager:GetAllStations()
+    
+    -- Отправка станций клиенту
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local getStations = ReplicatedStorage.Remotes.Crafting.GetStations
+    getStations:FireClient(player, stations)
 end
 
 -- Инициализация при загрузке
