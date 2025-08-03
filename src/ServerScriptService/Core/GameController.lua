@@ -8,6 +8,7 @@ local WaveManager = require(ServerScriptService.Systems.WaveSystem.WaveManager)
 local ResourceManager = require(ServerScriptService.Systems.ResourceSystem.ResourceManager)
 local BuildManager = require(ServerScriptService.Systems.BuildingSystem.BuildManager)
 local CombatManager = require(ServerScriptService.Systems.CombatSystem.CombatManager)
+local EnemyManager = require(ServerScriptService.Systems.EnemySystem.EnemyManager)
 local AntiCheat = require(ServerScriptService.Security.AntiCheat)
 local ProfileService = require(ServerScriptService.Data.ProfileService)
 
@@ -43,13 +44,19 @@ GameController.Events = {
 
 function GameController:Initialize()
     print("[GameController] Initializing Nexus Siege...")
+    
     -- Инициализация систем
+    ProfileService:Initialize()
+    EnemyManager:Initialize()
     WaveManager:Initialize()
     ResourceManager:Initialize()
     BuildManager:Initialize()
     CombatManager:Initialize()
     AntiCheat:Initialize()
-    ProfileService:Initialize()
+    
+    -- Создание Нексуса
+    self:CreateNexus()
+    
     -- События игроков
     Players.PlayerAdded:Connect(function(player)
         self:OnPlayerJoined(player)
@@ -57,16 +64,228 @@ function GameController:Initialize()
     Players.PlayerRemoving:Connect(function(player)
         self:OnPlayerLeft(player)
     end)
+    
     -- Подключение Remotes
     self:ConnectRemotes()
+    
     -- Запуск игрового цикла
+    self:StartGameLoop()
+    
+    print("[GameController] Initialization completed!")
+end
+
+-- Создание Нексуса
+function GameController:CreateNexus()
+    local nexus = Instance.new("Model")
+    nexus.Name = "Nexus"
+    nexus.Parent = workspace
+    
+    -- Основная часть Нексуса
+    local primaryPart = Instance.new("Part")
+    primaryPart.Name = "PrimaryPart"
+    primaryPart.Size = GameConstants.NEXUS.SIZE
+    primaryPart.Position = GameConstants.NEXUS.POSITION
+    primaryPart.Anchored = true
+    primaryPart.CanCollide = true
+    primaryPart.Material = Enum.Material.Neon
+    primaryPart.Color = Color3.fromRGB(0, 255, 255) -- Голубой
+    primaryPart.Parent = nexus
+    
+    -- Humanoid для здоровья
+    local humanoid = Instance.new("Humanoid")
+    humanoid.MaxHealth = GameConstants.NEXUS.MAX_HEALTH
+    humanoid.Health = GameConstants.NEXUS.MAX_HEALTH
+    humanoid.Parent = nexus
+    
+    -- Установка PrimaryPart
+    nexus.PrimaryPart = primaryPart
+    
+    -- Атрибуты Нексуса
+    nexus:SetAttribute("IsNexus", true)
+    nexus:SetAttribute("MaxHealth", GameConstants.NEXUS.MAX_HEALTH)
+    
+    -- Подключение события смерти Нексуса
+    humanoid.Died:Connect(function()
+        self:OnNexusDestroyed()
+    end)
+    
+    print("[GameController] Nexus created at", GameConstants.NEXUS.POSITION)
+end
+
+-- Обработка смерти Нексуса
+function GameController:OnNexusDestroyed()
+    print("[GameController] Nexus destroyed! Game Over!")
+    
+    -- Изменение состояния игры
+    self.State.IsGameActive = false
+    self.State.Phase = GameConstants.Phases.DEFEAT
+    
+    -- Уведомление всех игроков
+    for _, player in pairs(Players:GetPlayers()) do
+        self:NotifyPlayer(player, "Нексус разрушен! Игра окончена!", "error", 10)
+    end
+    
+    -- Запуск события окончания игры
+    self.Events.GameEnded:Fire("Defeat")
+    
+    -- Ожидание перед перезапуском
+    task.wait(10)
+    self:RestartGame()
+end
+
+-- Перезапуск игры
+function GameController:RestartGame()
+    print("[GameController] Restarting game...")
+    
+    -- Сброс состояния
+    self.State.Phase = GameConstants.Phases.WAITING
+    self.State.Wave = 0
+    self.State.NexusHealth = GameConstants.NEXUS.MAX_HEALTH
+    self.State.MatchTime = 0
+    self.State.IsGameActive = false
+    self.State.StartTime = 0
+    
+    -- Очистка врагов
+    EnemyManager:ClearAllEnemies()
+    
+    -- Восстановление Нексуса
+    local nexus = workspace:FindFirstChild("Nexus")
+    if nexus then
+        local humanoid = nexus:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.Health = GameConstants.NEXUS.MAX_HEALTH
+        end
+    end
+    
+    -- Перезапуск игрового цикла
     self:StartGameLoop()
 end
 
-function GameController:InitializeSystems()
-    -- Здесь будут инициализированы все системы
-    -- WaveManager, ResourceManager, BuildingSystem и т.д.
-    print("[GameController] Systems initialized")
+-- Обработка присоединения игрока
+function GameController:OnPlayerJoined(player)
+    print("[GameController] Player joined:", player.Name)
+    
+    -- Ожидание загрузки персонажа
+    player.CharacterAdded:Connect(function(character)
+        self:OnCharacterSpawned(player, character)
+    end)
+    
+    -- Если персонаж уже существует
+    if player.Character then
+        self:OnCharacterSpawned(player, player.Character)
+    end
+    
+    -- Запуск события
+    self.Events.PlayerJoined:Fire(player)
+    
+    -- Проверка готовности к старту
+    if #Players:GetPlayers() >= GameConstants.MIN_PLAYERS_TO_START and not self.State.IsGameActive then
+        self:StartMatch()
+    end
+end
+
+-- Обработка выхода игрока
+function GameController:OnPlayerLeft(player)
+    print("[GameController] Player left:", player.Name)
+    
+    -- Очистка данных игрока
+    ResourceManager:CleanupPlayer(player)
+    BuildManager:CleanupPlayer(player)
+    
+    -- Запуск события
+    self.Events.PlayerLeft:Fire(player)
+    
+    -- Проверка окончания игры
+    if #Players:GetPlayers() < GameConstants.MIN_PLAYERS_TO_START and self.State.IsGameActive then
+        self:EndMatch("Not enough players")
+    end
+end
+
+-- Обработка спавна персонажа
+function GameController:OnCharacterSpawned(player, character)
+    print("[GameController] Character spawned for:", player.Name)
+    
+    -- Настройка персонажа
+    self:SetupCharacter(player, character)
+    
+    -- Выдача инструментов
+    self:GiveStartingTools(player)
+    
+    -- Уведомление игрока
+    self:NotifyPlayer(player, "Добро пожаловать в Nexus Siege!", "info", 5)
+end
+
+-- Настройка персонажа
+function GameController:SetupCharacter(player, character)
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid then
+        -- Получение данных игрока
+        local playerData = ProfileService:GetPlayerData(player)
+        local classStats = self:GetClassStats(playerData.selectedClass)
+        
+        -- Применение характеристик класса
+        humanoid.MaxHealth = classStats.health or 100
+        humanoid.Health = humanoid.MaxHealth
+        humanoid.WalkSpeed = classStats.speed or 16
+        humanoid.JumpPower = 50
+        
+        -- Установка атрибутов
+        character:SetAttribute("PlayerClass", playerData.selectedClass)
+        character:SetAttribute("PlayerLevel", playerData.level)
+    end
+end
+
+-- Выдача начальных инструментов
+function GameController:GiveStartingTools(player)
+    local character = player.Character
+    if not character then return end
+    
+    -- Создание инструментов
+    local tools = {
+        {name = "Axe", toolType = "Tool"},
+        {name = "Pickaxe", toolType = "Tool"},
+        {name = "CrystalPick", toolType = "Tool"}
+    }
+    
+    for _, toolData in ipairs(tools) do
+        local tool = Instance.new(toolData.toolType)
+        tool.Name = toolData.name
+        tool.Parent = character
+    end
+end
+
+-- Получение характеристик класса
+function GameController:GetClassStats(className)
+    local classStats = {
+        Warrior = {
+            health = 200,
+            speed = 14,
+            damage = 30,
+            armor = 20
+        },
+        Engineer = {
+            health = 150,
+            speed = 16,
+            damage = 20,
+            armor = 10
+        },
+        Miner = {
+            health = 175,
+            speed = 18,
+            damage = 25,
+            armor = 15
+        }
+    }
+    
+    return classStats[className] or classStats.Warrior
+end
+
+-- Уведомление игрока
+function GameController:NotifyPlayer(player, message, type, duration)
+    local remote = Remotes.ShowNotification
+    if remote then
+        remote:FireClient(player, message, type, duration or 3)
+    end
 end
 
 function GameController:StartGameLoop()
@@ -74,7 +293,7 @@ function GameController:StartGameLoop()
     
     -- Ожидание игроков
     while #Players:GetPlayers() < GameConstants.MIN_PLAYERS_TO_START do
-        wait(1)
+        task.wait(1)
     end
     
     -- Начало матча
@@ -414,30 +633,172 @@ function GameController:GetGameState()
 end
 
 function GameController:ConnectRemotes()
+    print("[GameController] Connecting Remote Events...")
+    
+    -- Подключение UseAbility
     if Remotes.UseAbility then
-        Remotes.UseAbility.OnServerEvent:Connect(function(player, abilityNumber)
-            print("[Remote] UseAbility from", player.Name, abilityNumber)
-            -- TODO: Проверка класса, кулдауна, маны и вызов способности
+        Remotes.UseAbility.OnServerEvent:Connect(function(player, abilityName)
+            self:HandleUseAbility(player, abilityName)
         end)
     end
+    
+    -- Подключение BuildStructure
     if Remotes.BuildStructure then
         Remotes.BuildStructure.OnServerEvent:Connect(function(player, structureType, position)
-            print("[Remote] BuildStructure from", player.Name, structureType, position)
-            BuildManager:BuildStructure(player, structureType, position)
+            self:HandleBuildStructure(player, structureType, position)
         end)
     end
+    
+    -- Подключение GatherResource
     if Remotes.GatherResource then
         Remotes.GatherResource.OnServerEvent:Connect(function(player, resourceType, amount)
-            print("[Remote] GatherResource from", player.Name, resourceType, amount)
-            ResourceManager:GatherResource(player, resourceType, amount)
+            self:HandleGatherResource(player, resourceType, amount)
         end)
     end
+    
+    -- Подключение SelectClass
     if Remotes.SelectClass then
         Remotes.SelectClass.OnServerEvent:Connect(function(player, className)
-            print("[Remote] SelectClass from", player.Name, className)
-            self:SetPlayerClass(player, className)
+            self:HandleSelectClass(player, className)
         end)
     end
+    
+    print("[GameController] Remote Events connected successfully!")
+end
+
+-- Обработка использования способности
+function GameController:HandleUseAbility(player, abilityName)
+    if not player or not player.Character then
+        return
+    end
+    
+    -- Проверка анти-чита
+    if not AntiCheat:ValidateAction(player, "UseAbility", {abilityName = abilityName}) then
+        self:NotifyPlayer(player, "Действие отклонено анти-читом", "error")
+        return
+    end
+    
+    -- Получение класса игрока
+    local playerData = ProfileService:GetPlayerData(player)
+    local className = playerData.selectedClass
+    
+    -- Вызов способности в зависимости от класса
+    if className == "Warrior" then
+        self:HandleWarriorAbility(player, abilityName)
+    elseif className == "Engineer" then
+        self:HandleEngineerAbility(player, abilityName)
+    end
+end
+
+-- Обработка способностей воина
+function GameController:HandleWarriorAbility(player, abilityName)
+    local character = player.Character
+    if not character then return end
+    
+    -- Импорт класса воина
+    local Warrior = require(ServerScriptService.Systems.ClassSystem.Classes.Warrior)
+    local warrior = Warrior.new(character)
+    
+    if abilityName == "taunt" then
+        warrior:TauntEnemy()
+    elseif abilityName == "whirlwind" then
+        warrior:Whirlwind()
+    elseif abilityName == "groundSlam" then
+        warrior:GroundSlam()
+    elseif abilityName == "banner" then
+        warrior:PlantBanner()
+    end
+end
+
+-- Обработка способностей инженера
+function GameController:HandleEngineerAbility(player, abilityName)
+    local character = player.Character
+    if not character then return end
+    
+    -- Импорт класса инженера
+    local Engineer = require(ServerScriptService.Systems.ClassSystem.Classes.Engineer)
+    local engineer = Engineer.new(character)
+    
+    if abilityName == "repair" then
+        engineer:RepairStructure()
+    elseif abilityName == "shield" then
+        engineer:DeployShield()
+    elseif abilityName == "miniTurret" then
+        engineer:DeployMiniTurret()
+    elseif abilityName == "upgrade" then
+        engineer:UpgradeStructure()
+    end
+end
+
+-- Обработка строительства
+function GameController:HandleBuildStructure(player, structureType, position)
+    if not player or not position then
+        return
+    end
+    
+    -- Проверка анти-чита
+    if not AntiCheat:ValidateAction(player, "BuildStructure", {structureType = structureType, position = position}) then
+        self:NotifyPlayer(player, "Строительство отклонено анти-читом", "error")
+        return
+    end
+    
+    -- Попытка строительства
+    local success, message = BuildManager:BuildStructure(player, structureType, position)
+    
+    if success then
+        self:NotifyPlayer(player, message, "success")
+    else
+        self:NotifyPlayer(player, message, "error")
+    end
+end
+
+-- Обработка сбора ресурсов
+function GameController:HandleGatherResource(player, resourceType, amount)
+    if not player or not resourceType then
+        return
+    end
+    
+    -- Проверка анти-чита
+    if not AntiCheat:ValidateAction(player, "GatherResource", {resourceType = resourceType, amount = amount}) then
+        self:NotifyPlayer(player, "Сбор ресурсов отклонен анти-читом", "error")
+        return
+    end
+    
+    -- Сбор ресурса (основная логика в ResourceManager)
+    -- Эта функция может использоваться для дополнительных проверок
+end
+
+-- Обработка выбора класса
+function GameController:HandleSelectClass(player, className)
+    if not player or not className then
+        return
+    end
+    
+    -- Проверка доступности класса
+    local playerData = ProfileService:GetPlayerData(player)
+    local hasClass = false
+    
+    for _, unlockedClass in ipairs(playerData.unlockedClasses) do
+        if unlockedClass == unlockedClass then
+            hasClass = true
+            break
+        end
+    end
+    
+    if not hasClass then
+        self:NotifyPlayer(player, "Класс не разблокирован: " .. className, "error")
+        return
+    end
+    
+    -- Обновление выбранного класса
+    ProfileService:UpdatePlayerData(player, {selectedClass = className})
+    
+    -- Обновление характеристик персонажа
+    if player.Character then
+        self:SetupCharacter(player, player.Character)
+    end
+    
+    self:NotifyPlayer(player, "Класс изменен на: " .. className, "success")
 end
 
 -- Инициализация при загрузке
