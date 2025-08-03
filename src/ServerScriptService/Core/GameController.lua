@@ -11,6 +11,7 @@ local CombatManager = require(ServerScriptService.Systems.CombatSystem.CombatMan
 local EnemyManager = require(ServerScriptService.Systems.EnemySystem.EnemyManager)
 local AntiCheat = require(ServerScriptService.Security.AntiCheat)
 local ProfileService = require(ServerScriptService.Data.ProfileService)
+local AchievementManager = require(ServerScriptService.Systems.AchievementSystem.AchievementManager)
 
 -- Remotes
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -53,6 +54,7 @@ function GameController:Initialize()
     BuildManager:Initialize()
     CombatManager:Initialize()
     AntiCheat:Initialize()
+    AchievementManager:Initialize()
     
     -- Создание Нексуса
     self:CreateNexus()
