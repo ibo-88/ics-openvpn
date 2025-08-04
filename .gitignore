@@ -1,32 +1,62 @@
-build/
-main/libs/
-main/ovpnlibs/
-main/obj/
-main/.cxx/
+# Nexus Siege .gitignore
+
+# Rojo
+/build/
+/*.rbxl
+/*.rbxlx
+
+# Roblox Studio
+/*.rbxm
+/*.rbxmx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-.navigation
-google-breakpad/
-ovpn3/boost
-polarssl
-local.properties
-proguard-project.txt
-build.xml
-cache.properties
-.gradle
+Thumbs.db
+desktop.ini
 
-# User-specific configurations
-.idea
-*.iml
+# Logs
+*.log
+logs/
 
-main/openvpn3
+# Temporary files
+*.tmp
+*.temp
+temp/
 
+# Backup files
+*.bak
+*.backup
 
-main/src/ovpn3/java/net/openvpn/ovpn3
-main/.externalNativeBuild
-main/.cxx
-.synopsys
-polaris.yml
-.coverity
-idir
+# Node modules (if using any build tools)
+node_modules/
 
-test.local.conf
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Build artifacts
+dist/
+build/
+out/
+
+# Test coverage
+coverage/
+
+# Package files
+*.tgz
+*.tar.gz
+
+# Editor config
+.editorconfig
+
+# Local configuration
+config.local.lua
+settings.local.json
