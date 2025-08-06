@@ -11,279 +11,302 @@ local function CreateTrollModel()
     -- Тело тролля
     local body = Instance.new("Part")
     body.Name = "Body"
-    body.Size = Vector3.new(2, 3.5, 1.2)
+    body.Size = Vector3.new(1.5, 2.5, 0.8)
     body.Material = Enum.Material.Neon
-    body.Color = Color3.fromRGB(139, 69, 19) -- Коричневый цвет кожи
+    body.Color = Color3.fromRGB(128, 128, 128) -- Серый цвет тролля
     body.Anchored = true
     body.CanCollide = true
     body.Parent = model
     
-    -- Создание текстуры кожи
-    local skinTexture = Instance.new("Texture")
-    skinTexture.Texture = "rbxassetid://0" -- Замените на реальный ID текстуры
-    skinTexture.StudsPerTileU = 1
-    skinTexture.StudsPerTileV = 1
-    skinTexture.Parent = body
-    
     -- Голова тролля
     local head = Instance.new("Part")
     head.Name = "Head"
-    head.Size = Vector3.new(1.8, 1.8, 1.8)
+    head.Size = Vector3.new(1.2, 1.2, 1.2)
     head.Material = Enum.Material.Neon
-    head.Color = Color3.fromRGB(160, 82, 45) -- Светло-коричневый
+    head.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
     head.Anchored = true
     head.CanCollide = true
     head.Parent = model
     
-    head.Position = body.Position + Vector3.new(0, 2.65, 0)
+    head.Position = body.Position + Vector3.new(0, 1.85, 0)
     
-    -- Глаза тролля (желтые)
+    -- Глаза тролля
     for i = 1, 2 do
         local eye = Instance.new("Part")
         eye.Name = "Eye" .. i
-        eye.Size = Vector3.new(0.3, 0.3, 0.3)
+        eye.Size = Vector3.new(0.15, 0.15, 0.15)
         eye.Material = Enum.Material.Neon
-        eye.Color = Color3.fromRGB(255, 255, 0) -- Желтые глаза
+        eye.Color = Color3.fromRGB(255, 0, 0) -- Красные глаза
         eye.Anchored = true
         eye.CanCollide = false
         eye.Parent = head
         
         -- Позиционирование глаз
-        local xPos = (i == 1) and 0.4 or -0.4
-        eye.Position = head.Position + Vector3.new(xPos, 0.2, 0.8)
+        local xPos = (i == 1) and 0.3 or -0.3
+        eye.Position = head.Position + Vector3.new(xPos, 0.2, 0.55)
         
         -- Свечение глаз
         local pointLight = Instance.new("PointLight")
-        pointLight.Color = Color3.fromRGB(255, 255, 0)
+        pointLight.Color = Color3.fromRGB(255, 0, 0)
         pointLight.Range = 3
-        pointLight.Brightness = 2
+        pointLight.Brightness = 1.5
         pointLight.Parent = eye
     end
     
-    -- Большие клыки тролля
-    for i = 1, 6 do
-        local tusk = Instance.new("Part")
-        tusk.Name = "Tusk" .. i
-        tusk.Size = Vector3.new(0.2, 0.6, 0.2)
-        tusk.Material = Enum.Material.Metal
-        tusk.Color = Color3.fromRGB(255, 255, 255) -- Белые клыки
-        tusk.Anchored = true
-        tusk.CanCollide = false
-        tusk.Parent = head
+    -- Рот тролля
+    local mouth = Instance.new("Part")
+    mouth.Name = "Mouth"
+    mouth.Size = Vector3.new(0.8, 0.3, 0.2)
+    mouth.Material = Enum.Material.Neon
+    mouth.Color = Color3.fromRGB(64, 64, 64) -- Очень темно-серый
+    mouth.Anchored = true
+    mouth.CanCollide = false
+    mouth.Parent = head
+    
+    mouth.Position = head.Position + Vector3.new(0, -0.3, 0.55)
+    
+    -- Клыки тролля
+    for i = 1, 4 do
+        local fang = Instance.new("Part")
+        fang.Name = "Fang" .. i
+        fang.Size = Vector3.new(0.1, 0.2, 0.1)
+        fang.Material = Enum.Material.Neon
+        fang.Color = Color3.fromRGB(255, 255, 255) -- Белые клыки
+        fang.Anchored = true
+        fang.CanCollide = false
+        fang.Parent = head
         
         -- Позиционирование клыков
-        local xPos = (i <= 3) and 0.5 or -0.5
-        local zPos = (i % 2 == 0) and 0.4 or -0.4
-        local yPos = (i <= 2) and -0.3 or ((i <= 4) and -0.6 or -0.9)
-        tusk.Position = head.Position + Vector3.new(xPos, yPos, zPos)
-        tusk.Orientation = Vector3.new(0, 0, (i <= 3) and 20 or -20)
+        local xPos = (i <= 2) and 0.2 or -0.2
+        local yPos = (i % 2 == 0) and -0.1 or -0.2
+        fang.Position = mouth.Position + Vector3.new(xPos, yPos, 0.15)
     end
     
-    -- Рога тролля
+    -- Нос тролля
+    local nose = Instance.new("Part")
+    nose.Name = "Nose"
+    nose.Size = Vector3.new(0.3, 0.2, 0.3)
+    nose.Material = Enum.Material.Neon
+    nose.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
+    nose.Anchored = true
+    nose.CanCollide = false
+    nose.Parent = head
+    
+    nose.Position = head.Position + Vector3.new(0, 0, 0.75)
+    
+    -- Уши тролля
     for i = 1, 2 do
-        local horn = Instance.new("Part")
-        horn.Name = "Horn" .. i
-        horn.Size = Vector3.new(0.3, 1, 0.3)
-        horn.Material = Enum.Material.Metal
-        horn.Color = Color3.fromRGB(192, 192, 192) -- Серебряный
-        horn.Anchored = true
-        horn.CanCollide = false
-        horn.Parent = head
+        local ear = Instance.new("Part")
+        ear.Name = "Ear" .. i
+        ear.Size = Vector3.new(0.2, 0.4, 0.2)
+        ear.Material = Enum.Material.Neon
+        ear.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
+        ear.Anchored = true
+        ear.CanCollide = false
+        ear.Parent = head
         
-        -- Позиционирование рогов
-        local xPos = (i == 1) and 0.6 or -0.6
-        horn.Position = head.Position + Vector3.new(xPos, 1.2, 0)
-        horn.Orientation = Vector3.new(0, 0, (i == 1) and 25 or -25)
+        -- Позиционирование ушей
+        local xPos = (i == 1) and 0.7 or -0.7
+        ear.Position = head.Position + Vector3.new(xPos, 0.3, 0)
     end
     
     -- Руки тролля
     for i = 1, 2 do
         local arm = Instance.new("Part")
         arm.Name = "Arm" .. i
-        arm.Size = Vector3.new(0.8, 1.8, 0.8)
+        arm.Size = Vector3.new(0.5, 1.5, 0.5)
         arm.Material = Enum.Material.Neon
-        arm.Color = Color3.fromRGB(139, 69, 19)
+        arm.Color = Color3.fromRGB(128, 128, 128)
         arm.Anchored = true
         arm.CanCollide = true
         arm.Parent = model
         
         -- Позиционирование рук
-        local xPos = (i == 1) and 1.4 or -1.4
+        local xPos = (i == 1) and 1 or -1
         arm.Position = body.Position + Vector3.new(xPos, 0.5, 0)
+        
+        -- Кисти тролля
+        local hand = Instance.new("Part")
+        hand.Name = "Hand" .. i
+        hand.Size = Vector3.new(0.4, 0.4, 0.4)
+        hand.Material = Enum.Material.Neon
+        hand.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
+        hand.Anchored = true
+        hand.CanCollide = true
+        hand.Parent = model
+        
+        hand.Position = arm.Position + Vector3.new(0, -0.95, 0)
+        
+        -- Когти тролля
+        for j = 1, 3 do
+            local claw = Instance.new("Part")
+            claw.Name = "Claw" .. i .. "_" .. j
+            claw.Size = Vector3.new(0.05, 0.2, 0.05)
+            claw.Material = Enum.Material.Neon
+            claw.Color = Color3.fromRGB(64, 64, 64) -- Очень темно-серый
+            claw.Anchored = true
+            claw.CanCollide = false
+            claw.Parent = model
+            
+            -- Позиционирование когтей
+            local angle = (j - 2) * 30
+            local radius = 0.2
+            local xPos = math.cos(math.rad(angle)) * radius
+            local zPos = math.sin(math.rad(angle)) * radius
+            claw.Position = hand.Position + Vector3.new(xPos, -0.3, zPos)
+        end
     end
     
     -- Ноги тролля
     for i = 1, 2 do
         local leg = Instance.new("Part")
         leg.Name = "Leg" .. i
-        leg.Size = Vector3.new(1, 2, 1)
+        leg.Size = Vector3.new(0.6, 1.2, 0.6)
         leg.Material = Enum.Material.Neon
-        leg.Color = Color3.fromRGB(139, 69, 19)
+        leg.Color = Color3.fromRGB(128, 128, 128)
         leg.Anchored = true
         leg.CanCollide = true
         leg.Parent = model
         
         -- Позиционирование ног
-        local xPos = (i == 1) and 0.5 or -0.5
-        leg.Position = body.Position + Vector3.new(xPos, -2.75, 0)
+        local xPos = (i == 1) and 0.4 or -0.4
+        leg.Position = body.Position + Vector3.new(xPos, -1.85, 0)
+        
+        -- Стопы тролля
+        local foot = Instance.new("Part")
+        foot.Name = "Foot" .. i
+        foot.Size = Vector3.new(0.8, 0.3, 0.8)
+        foot.Material = Enum.Material.Neon
+        foot.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
+        foot.Anchored = true
+        foot.CanCollide = true
+        foot.Parent = model
+        
+        foot.Position = leg.Position + Vector3.new(0, -0.75, 0)
     end
     
-    -- Оружие тролля (огромная дубина)
-    local weapon = Instance.new("Part")
-    weapon.Name = "Weapon"
-    weapon.Size = Vector3.new(0.5, 2.5, 0.5)
-    weapon.Material = Enum.Material.Wood
-    weapon.Color = Color3.fromRGB(101, 67, 33) -- Темно-коричневый
-    weapon.Anchored = true
-    weapon.CanCollide = false
-    weapon.Parent = model
+    -- Оружие тролля (дубина)
+    local club = Instance.new("Part")
+    club.Name = "Club"
+    club.Size = Vector3.new(0.3, 2.5, 0.3)
+    club.Material = Enum.Material.Wood
+    club.Color = Color3.fromRGB(139, 69, 19) -- Коричневый
+    club.Anchored = true
+    club.CanCollide = false
+    club.Parent = model
     
-    weapon.Position = body.Position + Vector3.new(2.2, 0.5, 0)
+    club.Position = body.Position + Vector3.new(1.5, 0.5, 0)
     
-    -- Рукоять дубины
-    local handle = Instance.new("Part")
-    handle.Name = "Handle"
-    handle.Size = Vector3.new(0.4, 0.8, 0.4)
-    handle.Material = Enum.Material.Wood
-    handle.Color = Color3.fromRGB(139, 69, 19) -- Коричневый
-    handle.Anchored = true
-    handle.CanCollide = false
-    handle.Parent = weapon
-    
-    handle.Position = weapon.Position + Vector3.new(0, -1.65, 0)
-    
-    -- Головка дубины
+    -- Голова дубины
     local clubHead = Instance.new("Part")
     clubHead.Name = "ClubHead"
-    clubHead.Size = Vector3.new(1.2, 1.2, 1.2)
-    clubHead.Material = Enum.Material.Wood
-    clubHead.Color = Color3.fromRGB(101, 67, 33) -- Темно-коричневый
+    clubHead.Size = Vector3.new(0.8, 0.8, 0.8)
+    clubHead.Material = Enum.Material.Rock
+    clubHead.Color = Color3.fromRGB(105, 105, 105) -- Серый камень
     clubHead.Anchored = true
     clubHead.CanCollide = false
-    clubHead.Parent = weapon
+    clubHead.Parent = model
     
-    clubHead.Position = weapon.Position + Vector3.new(0, 1.35, 0)
+    clubHead.Position = club.Position + Vector3.new(0, 1.65, 0)
     
     -- Шипы на дубине
-    for i = 1, 8 do
+    for i = 1, 6 do
         local spike = Instance.new("Part")
-        spike.Name = "Spike" .. i
-        spike.Size = Vector3.new(0.2, 0.4, 0.2)
+        spike.Name = "ClubSpike" .. i
+        spike.Size = Vector3.new(0.1, 0.3, 0.1)
         spike.Material = Enum.Material.Metal
         spike.Color = Color3.fromRGB(192, 192, 192) -- Серебряный
         spike.Anchored = true
         spike.CanCollide = false
-        spike.Parent = clubHead
+        spike.Parent = model
         
         -- Позиционирование шипов
-        local angle = (i - 1) * 45
-        local radius = 0.6
+        local angle = (i - 1) * 60
+        local radius = 0.4
         local xPos = math.cos(math.rad(angle)) * radius
         local zPos = math.sin(math.rad(angle)) * radius
-        spike.Position = clubHead.Position + Vector3.new(xPos, 0.8, zPos)
-        spike.Orientation = Vector3.new(0, angle, 0)
+        spike.Position = clubHead.Position + Vector3.new(xPos, 0.55, zPos)
     end
     
     -- Броня тролля
-    for i = 1, 8 do
-        local armorPlate = Instance.new("Part")
-        armorPlate.Name = "TrollArmorPlate" .. i
-        armorPlate.Size = Vector3.new(1.5, 0.5, 0.2)
-        armorPlate.Material = Enum.Material.Metal
-        armorPlate.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
-        armorPlate.Anchored = true
-        armorPlate.CanCollide = false
-        armorPlate.Parent = model
+    for i = 1, 4 do
+        local armor = Instance.new("Part")
+        armor.Name = "Armor" .. i
+        armor.Size = Vector3.new(1.3, 0.4, 0.6)
+        armor.Material = Enum.Material.Metal
+        armor.Color = Color3.fromRGB(64, 64, 64) -- Очень темно-серый
+        armor.Anchored = true
+        armor.CanCollide = false
+        armor.Parent = model
         
         -- Позиционирование брони
-        local yPos = 0.5 + (i - 1) * 0.4
-        local zPos = (i % 2 == 0) and 0.7 or -0.7
-        armorPlate.Position = body.Position + Vector3.new(0, yPos, zPos)
-    end
-    
-    -- Нагрудник тролля
-    local chestplate = Instance.new("Part")
-    chestplate.Name = "TrollChestplate"
-    chestplate.Size = Vector3.new(1.8, 1.5, 0.4)
-    chestplate.Material = Enum.Material.Metal
-    chestplate.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
-    chestplate.Anchored = true
-    chestplate.CanCollide = false
-    chestplate.Parent = model
-    
-    chestplate.Position = body.Position + Vector3.new(0, 0.8, 0.8)
-    
-    -- Шлем тролля
-    local helmet = Instance.new("Part")
-    helmet.Name = "TrollHelmet"
-    helmet.Size = Vector3.new(1.9, 1, 1.9)
-    helmet.Material = Enum.Material.Metal
-    helmet.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
-    helmet.Anchored = true
-    helmet.CanCollide = false
-    helmet.Parent = model
-    
-    helmet.Position = head.Position + Vector3.new(0, 0.4, 0)
-    
-    -- Декоративные элементы на шлеме
-    for i = 1, 4 do
-        local decoration = Instance.new("Part")
-        decoration.Name = "HelmetDecoration" .. i
-        decoration.Size = Vector3.new(0.2, 0.4, 0.2)
-        decoration.Material = Enum.Material.Metal
-        decoration.Color = Color3.fromRGB(255, 215, 0) -- Золотой
-        decoration.Anchored = true
-        decoration.CanCollide = false
-        decoration.Parent = helmet
-        
-        -- Позиционирование декораций
-        local angle = (i - 1) * 90
-        local radius = 0.7
-        local xPos = math.cos(math.rad(angle)) * radius
-        local zPos = math.sin(math.rad(angle)) * radius
-        decoration.Position = helmet.Position + Vector3.new(xPos, 0.7, zPos)
+        local yPos = -0.5 + (i - 1) * 0.5
+        armor.Position = body.Position + Vector3.new(0, yPos, 0)
     end
     
     -- Наплечники тролля
     for i = 1, 2 do
         local pauldron = Instance.new("Part")
         pauldron.Name = "Pauldron" .. i
-        pauldron.Size = Vector3.new(1.2, 0.8, 1.2)
+        pauldron.Size = Vector3.new(0.8, 0.6, 0.8)
         pauldron.Material = Enum.Material.Metal
-        pauldron.Color = Color3.fromRGB(105, 105, 105) -- Темно-серый
+        pauldron.Color = Color3.fromRGB(64, 64, 64) -- Очень темно-серый
         pauldron.Anchored = true
         pauldron.CanCollide = false
         pauldron.Parent = model
         
         -- Позиционирование наплечников
-        local xPos = (i == 1) and 1.1 or -1.1
-        pauldron.Position = body.Position + Vector3.new(xPos, 1.2, 0)
+        local xPos = (i == 1) and 0.8 or -0.8
+        pauldron.Position = body.Position + Vector3.new(xPos, 0.5, 0)
+        
+        -- Шипы на наплечниках
+        for j = 1, 3 do
+            local pauldronSpike = Instance.new("Part")
+            pauldronSpike.Name = "PauldronSpike" .. i .. "_" .. j
+            pauldronSpike.Size = Vector3.new(0.1, 0.2, 0.1)
+            pauldronSpike.Material = Enum.Material.Metal
+            pauldronSpike.Color = Color3.fromRGB(192, 192, 192) -- Серебряный
+            pauldronSpike.Anchored = true
+            pauldronSpike.CanCollide = false
+            pauldronSpike.Parent = model
+            
+            -- Позиционирование шипов наплечников
+            local angle = (j - 2) * 45
+            local radius = 0.3
+            local spikeXPos = math.cos(math.rad(angle)) * radius
+            local spikeZPos = math.sin(math.rad(angle)) * radius
+            pauldronSpike.Position = pauldron.Position + Vector3.new(spikeXPos, 0.4, spikeZPos)
+        end
     end
     
-    -- Эффекты тролля
-    local aura = Instance.new("Part")
-    aura.Name = "TrollAura"
-    aura.Size = Vector3.new(4, 4, 4)
-    aura.Material = Enum.Material.Neon
-    aura.Color = Color3.fromRGB(255, 165, 0) -- Оранжевая аура
-    aura.Transparency = 0.8
-    aura.Anchored = true
-    aura.CanCollide = false
-    aura.Parent = model
+    -- Пояс тролля
+    local belt = Instance.new("Part")
+    belt.Name = "Belt"
+    belt.Size = Vector3.new(1.6, 0.3, 0.8)
+    belt.Material = Enum.Material.Leather
+    belt.Color = Color3.fromRGB(139, 69, 19) -- Коричневый
+    belt.Anchored = true
+    belt.CanCollide = false
+    belt.Parent = model
     
-    aura.Position = body.Position
+    belt.Position = body.Position + Vector3.new(0, -0.2, 0)
     
-    -- Свечение ауры
-    local auraLight = Instance.new("PointLight")
-    auraLight.Color = Color3.fromRGB(255, 165, 0)
-    auraLight.Range = 7
-    auraLight.Brightness = 1.5
-    auraLight.Parent = aura
+    -- Пряжка пояса
+    local buckle = Instance.new("Part")
+    buckle.Name = "BeltBuckle"
+    buckle.Size = Vector3.new(0.3, 0.3, 0.1)
+    buckle.Material = Enum.Material.Metal
+    buckle.Color = Color3.fromRGB(255, 215, 0) -- Золотой
+    buckle.Anchored = true
+    buckle.CanCollide = false
+    buckle.Parent = model
+    
+    buckle.Position = belt.Position + Vector3.new(0, 0, 0.45)
     
     -- UI для тролля
     local billboardGui = Instance.new("BillboardGui")
-    billboardGui.Size = UDim2.new(0, 250, 0, 60)
-    billboardGui.StudsOffset = Vector3.new(0, 5, 0)
+    billboardGui.Size = UDim2.new(0, 200, 0, 50)
+    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
     billboardGui.Parent = head
     
     local nameLabel = Instance.new("TextLabel")
@@ -291,7 +314,7 @@ local function CreateTrollModel()
     nameLabel.Position = UDim2.new(0, 0, 0, 0)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = "Тролль"
-    nameLabel.TextColor3 = Color3.fromRGB(255, 165, 0) -- Оранжевый текст
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     nameLabel.TextScaled = true
     nameLabel.Font = Enum.Font.GothamBold
     nameLabel.Parent = billboardGui
@@ -306,24 +329,26 @@ local function CreateTrollModel()
     local healthFill = Instance.new("Frame")
     healthFill.Size = UDim2.new(1, 0, 1, 0)
     healthFill.Position = UDim2.new(0, 0, 0, 0)
-    healthFill.BackgroundColor3 = Color3.fromRGB(255, 165, 0) -- Оранжевый
+    healthFill.BackgroundColor3 = Color3.fromRGB(128, 128, 128) -- Серый
     healthFill.BorderSizePixel = 0
     healthFill.Parent = healthBar
     
     -- Установка атрибутов
     model:SetAttribute("EnemyType", "troll")
-    model:SetAttribute("Health", 300)
-    model:SetAttribute("MaxHealth", 300)
-    model:SetAttribute("Damage", 55)
+    model:SetAttribute("Health", 120)
+    model:SetAttribute("MaxHealth", 120)
+    model:SetAttribute("Damage", 35)
     model:SetAttribute("Speed", 4)
-    model:SetAttribute("AttackRange", 7)
-    model:SetAttribute("AttackCooldown", 2.5)
+    model:SetAttribute("AttackRange", 5)
+    model:SetAttribute("AttackCooldown", 3)
     model:SetAttribute("LootTable", "enemy_loot.troll")
     model:SetAttribute("IsSpecificEnemy", true)
-    model:SetAttribute("IsElite", true)
-    model:SetAttribute("ExperienceReward", 100)
-    model:SetAttribute("GoldReward", 50)
-    model:SetAttribute("SpecialAbility", "ground_slam")
+    model:SetAttribute("IsElite", false)
+    model:SetAttribute("ExperienceReward", 40)
+    model:SetAttribute("GoldReward", 20)
+    model:SetAttribute("ClubDamage", 45)
+    model:SetAttribute("ArmorValue", 15)
+    model:SetAttribute("Regeneration", 2)
     
     -- Сохранение ссылок на UI элементы
     model:SetAttribute("HealthBar", healthBar)
